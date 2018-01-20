@@ -15,12 +15,16 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     Intent intent;
     SpeechRecognizer mRecognizer;
     TextView textView;
+    TextView textView2;
     private final int MY_PERMISSIONS_RECORD_AUDIO = 1;
     private long lastTimeBackPressed;
 
@@ -51,8 +55,8 @@ public class MainActivity extends AppCompatActivity {
         mRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
         mRecognizer.setRecognitionListener(recognitionListener);
 
-
-        textView = (TextView) findViewById(R.id.voicText);
+        textView2 = (TextView) findViewById(R.id.result);
+        textView = (TextView) findViewById(R.id.voiceText);
 
         Button button = (Button) findViewById(R.id.voice);
         button.setOnClickListener(new View.OnClickListener() {
@@ -114,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
             mResult.toArray(rs);
 
             textView.setText(rs[0]);
+            sendObject(rs[0]);
         }
 
         @Override
@@ -124,4 +129,25 @@ public class MainActivity extends AppCompatActivity {
         public void onEvent(int i, Bundle bundle) {
         }
     };
+
+    private void sendObject(String s){
+        JSONObject jsonObject = new JSONObject();
+        try{
+            jsonObject.put("textVoice", s);
+            textView2.setText(jsonObject.getString("textVoice"));
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+       // receiveObject(jsonObject);
+    }
+
+    private void receiveObject(JSONObject data){
+       // recyclerView.setVisibility(View.GONE);
+        //objectResultLo.setVisibility(View.VISIBLE);
+        try{
+            textView.setText("reponse : " + data.getString("reponse"));
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+    }
 }
