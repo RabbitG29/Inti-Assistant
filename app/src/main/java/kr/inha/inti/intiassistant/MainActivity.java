@@ -3,6 +3,7 @@ package kr.inha.inti.intiassistant;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -10,6 +11,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -27,12 +29,15 @@ public class MainActivity extends AppCompatActivity {
     TextView textView2;
     private final int MY_PERMISSIONS_RECORD_AUDIO = 1;
     private long lastTimeBackPressed;
+    final String url = "http://39.115.148.109:5000/request/google-assistant";
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.RECORD_AUDIO)
@@ -118,7 +123,9 @@ public class MainActivity extends AppCompatActivity {
             mResult.toArray(rs);
 
             textView.setText(rs[0]);
-            sendObject(rs[0]);
+            VoiceTask voiceTask = new VoiceTask(url, rs[0]);
+            voiceTask.execute();
+            Log.e("execute","execute");
         }
 
         @Override
@@ -130,24 +137,41 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void sendObject(String s){
-        JSONObject jsonObject = new JSONObject();
-        try{
-            jsonObject.put("textVoice", s);
-            textView2.setText(jsonObject.getString("textVoice"));
-        }catch (JSONException e){
-            e.printStackTrace();
+    class VoiceTask extends AsyncTask<String,Integer, String> {
+        String url;
+        String s;
+
+        public VoiceTask(String url, String voice) {
+            this.url = url;
+            this.s = voice;
         }
-       // receiveObject(jsonObject);
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            String result = "";
+            JSONObject jsonObject = new JSONObject();
+            try{
+                jsonObject.put("textVoice", s);
+            }catch (JSONException e){
+                e.printStackTrace();
+            }
+            RequestHttpURLConnection requestHttpURLConnection = new RequestHttpURLConnection();
+            result = requestHttpURLConnection.request(url, s);
+            Log.e("Async","Async");
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            textView2.setText(result);
+        }
     }
 
-    private void receiveObject(JSONObject data){
-       // recyclerView.setVisibility(View.GONE);
-        //objectResultLo.setVisibility(View.VISIBLE);
-        try{
-            textView.setText("reponse : " + data.getString("reponse"));
-        } catch (JSONException e){
-            e.printStackTrace();
-        }
-    }
 }
+
+
